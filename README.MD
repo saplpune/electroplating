@@ -8,7 +8,7 @@
 - Power factor correction system
 - Surge protection devices
 
-### 1.2 Power Conversion
+#### 1.2 Power Conversion
 - AC/DC rectifiers for plating power supplies
   - Pulse rectifiers with programmable waveform generation
   - Current capacity based on maximum plating requirements
