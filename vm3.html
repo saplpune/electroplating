@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Laboratory System</title>
+    <style>
+        /* Base Styles */
+        :root {
+            --primary: #1e40af;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .lab-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: #1e293b;
+            color: white;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            margin: 1rem 0;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        /* Instruments Panel */
+        .instrument-panel {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            overflow: hidden;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: white;
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Workspace */
+        .workspace {
+            background: #f8fafc;
+            padding: 1rem;
+            overflow: auto;
+            position: relative;
+        }
+
+        /* Components */
+        .component {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn.secondary {
+            background: var(--secondary);
+        }
+
+        /* Instrument Styles */
+        .instrument {
+            background: #334155;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .instrument:hover {
+            background: #475569;
+        }
+
+        /* Display Panels */
+        .panel-front {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Oscilloscope */
+        .oscilloscope {
+            width: 600px;
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .scope-screen {
+            background: #000;
+            border: 1px solid #334155;
+            margin: 1rem 0;
+        }
+
+        /* Multimeter */
+        .multimeter {
+            width: 300px;
+            background: #1e293b;
+            color: #22c55e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .multimeter-display {
+            background: #000;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            font-family: monospace;
+            font-size: 1.5rem;
+            text-align: right;
+        }
+
+        /* Controls */
+        select,
+        input[type="range"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+        }
+
+        .control-group {
+            margin: 1rem 0;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.running {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .status-indicator.stopped {
+            background: var(--danger);
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="lab-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>Virtual Lab</h2>
+
+            <h3>Instruments</h3>
+            <div class="instrument" draggable="true" data-type="oscilloscope">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="2" />
+                    <path d="M2 12h20" />
+                    <path d="M12 2v20" />
+                </svg>
+                Oscilloscope
+            </div>
+
+            <div class="instrument" draggable="true" data-type="multimeter">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="2" width="16" height="20" rx="2" />
+                    <line x1="8" y1="8" x2="16" y2="8" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                    <line x1="8" y1="16" x2="16" y2="16" />
+                </svg>
+                Multimeter
+            </div>
+
+            <div class="instrument" draggable="true" data-type="signal-generator">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s4-8 10-8 10 8 10 8" />
+                </svg>
+                Signal Generator
+            </div>
+
+            <h3>Analysis</h3>
+            <div class="instrument" draggable="true" data-type="spectrum">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 20h20" />
+                    <path d="M5 20v-4" />
+                    <path d="M9 20v-8" />
+                    <path d="M13 20v-6" />
+                    <path d="M17 20v-10" />
+                </svg>
+                Spectrum Analyzer
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="instrument-panel">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button class="btn" onclick="startMeasurement()">
+                    <span class="status-indicator stopped"></span>
+                    Run
+                </button>
+                <button class="btn secondary" onclick="stopMeasurement()">Stop</button>
+                <button class="btn secondary" onclick="saveData()">Save Data</button>
+
+                <select id="timebase">
+                    <option value="0.1">100 µs/div</option>
+                    <option value="0.2">200 µs/div</option>
+                    <option value="0.5">500 µs/div</option>
+                    <option value="1.0">1 ms/div</option>
+                </select>
+            </div>
+
+            <!-- Workspace -->
+            <div class="workspace">
+                <!-- Oscilloscope -->
+                <div class="panel-front oscilloscope">
+                    <h3>Digital Oscilloscope</h3>
+                    <canvas id="scopeDisplay" width="550" height="300" class="scope-screen"></canvas>
+
+                    <div class="control-group">
+                        <label>Voltage Scale</label>
+                        <select id="voltageScale">
+                            <option value="0.1">100 mV/div</option>
+                            <option value="0.2">200 mV/div</option>
+                            <option value="0.5">500 mV/div</option>
+                            <option value="1.0">1 V/div</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Signal Generator -->
+                <div class="panel-front">
+                    <h3>Signal Generator</h3>
+                    <div class="control-group">
+                        <label>Waveform</label>
+                        <select id="waveform">
+                            <option value="sine">Sine</option>
+                            <option value="square">Square</option>
+                            <option value="triangle">Triangle</option>
+                        </select>
+
+                        <label>Frequency (Hz)</label>
+                        <input type="range" id="frequency" min="1" max="1000" value="100">
+                        <span id="freqValue">100 Hz</span>
+
+                        <label>Amplitude (V)</label>
+                        <input type="range" id="amplitude" min="0" max="10" value="5" step="0.1">
+                        <span id="ampValue">5.0 V</span>
+                    </div>
+                </div>
+
+                <!-- Multimeter -->
+                <div class="panel-front multimeter">
+                    <h3>Digital Multimeter</h3>
+                    <div class="multimeter-display">0.000 V</div>
+                    <select id="meterFunction">
+                        <option value="dcv">DC Voltage</option>
+                        <option value="acv">AC Voltage</option>
+                        <option value="dci">DC Current</option>
+                        <option value="aci">AC Current</option>
+                        <option value="ohm">Resistance</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isRunning = false;
+        let animationId = null;
+        let scopeData = new Array(550).fill(150);
+
+        // Get canvas context
+        const scopeCanvas = document.getElementById('scopeDisplay');
+        const ctx = scopeCanvas.getContext('2d');
+
+        // Initialize oscilloscope grid
+        function drawGrid() {
+            ctx.strokeStyle = '#1a3b2a';
+            ctx.lineWidth = 0.5;
+
+            // Vertical lines
+            for (let x = 0; x < scopeCanvas.width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, scopeCanvas.height);
+                ctx.stroke();
+            }
+
+            // Horizontal lines
+            for (let y = 0; y < scopeCanvas.height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(scopeCanvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Draw oscilloscope trace
+        function drawScope() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
+
+            drawGrid();
+
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            scopeData.forEach((value, index) => {
+                if (index === 0) {
+                    ctx.moveTo(index, value);
+                } else {
+                    ctx.lineTo(index, value);
+                }
+            });
+
+            ctx.stroke();
+        }
+
+        // Generate waveform data
+        function updateSignal() {
+            const frequency = document.getElementById('frequency').value;
+            const amplitude = document.getElementById('amplitude').value;
+            const waveform = document.getElementById('waveform').value;
+            const time = Date.now() / 1000;
+
+            scopeData = scopeData.map((_, index) => {
+                const t = time + index * 0.001;
+                let value = 0;
+
+                switch (waveform) {
+                    case 'sine':
+                        value = Math.sin(2 * Math.PI * frequency * t);
+                        break;
+                    case 'square':
+                        value = Math.sin(2 * Math.PI * frequency * t) > 0 ? 1 : -1;
+                        break;
+                    case 'triangle':
+                        value = Math.asin(Math.sin(2 * Math.PI * frequency * t)) * 2 / Math.PI;
+                        break;
+                }
+
+                return 150 + value * amplitude * 20;
+            });
+
+            // Update multimeter display
+            const multimeterDisplay = document.querySelector('.multimeter-display');
+            const meterFunction = document.getElementById('meterFunction').value;
+            let reading;
+
+            switch (meterFunction) {
+                case 'dcv':
+                    reading = (amplitude * Math.random()).toFixed(3) + ' V';
+                    break;
+                case 'acv':
+                    reading = (amplitude * 0.707).toFixed(3) + ' V';
+                    break;
+                case 'dci':
+                    reading = (amplitude * 0.1).toFixed(3) + ' A';
+                    break;
+                case 'aci':
+                    reading = (amplitude * 0.07).toFixed(3) + ' A';
+                    break;
+                case 'ohm':
+                    reading = (100 + Math.random() * 10).toFixed(1) + ' Ω';
+                    break;
+            }
+
+            multimeterDisplay.textContent = reading;
+        }
+
+        // Animation loop
+        function animate() {
+            if (!isRunning) return;
+
+            updateSignal();
+            drawScope();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Control functions
+        function startMeasurement() {
+            isRunning = true;
+            document.querySelector('.status-indicator').className = 'status-indicator running';
+            animate();
+        }
+
+        function stopMeasurement() {
+            isRunning = false;
+            document.querySelector('.status-indicator').className = 'status-indicator stopped';
+            cancelAnimationFrame(animationId);
+        }
+
+        function saveData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                waveform: document.getElementById('waveform').value,
+                frequency: document.getElementById('frequency').value,
+                amplitude: document.getElementById('amplitude').value,
+                scopeData: scopeData,
+                settings: {
+                    timebase: document.getElementById('timebase').value,
+                    voltageScale: document.getElementById('voltageScale').value,
+                    meterFunction: document.getElementById('meterFunction').value
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lab_data_${new Date().toISOString().slice(0, 19)}.json`;
+            a.click();
+        }
+
+        // Event listeners for controls
+        document.getElementById('frequency').addEventListener('input', (e) => {
+            document.getElementById('freqValue').textContent = `${e.target.value} Hz`;
+        });
+
+        document.getElementById('amplitude').addEventListener('input', (e) => {
+            document.getElementById('ampValue').textContent = `${e.target.value} V`;
+        });
+
+        // Drag and drop functionality
+        let draggedElement = null;
+
+        document.querySelectorAll('.instrument').forEach(instrument => {
+            instrument.addEventListener('dragstart', (e) => {
+                draggedElement = e.target;
+                e.dataTransfer.setData('text/plain', e.target.dataset.type);
+            });
+        });
+
+        document.querySelector('.workspace').addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        document.querySelector('.workspace').addEventListener('drop', (e) => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData('text/plain');
+            createNewInstrument(type, e.clientX, e.clientY);
+        });
+
+        function createNewInstrument(type, x, y) {
+            const workspace = document.querySelector('.workspace');
+            const instrument = document.createElement('div');
+            instrument.className = 'panel-front';
+            instrument.style.position = 'absolute';
+            instrument.style.left = `${x - workspace.offsetLeft}px`;
+            instrument.style.top = `${y - workspace.offsetTop}px`;
+
+            switch (type) {
+                case 'oscilloscope':
+                    instrument.innerHTML = `
+                        <div class="oscilloscope">
+                            <h3>Oscilloscope</h3>
+                            <canvas width="550" height="300" class="scope-screen"></canvas>
+                            <div class="control-group">
+                                <select>
+                                    <option>100 mV/div</option>
+                                    <option>200 mV/div</option>
+                                    <option>500 mV/div</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'multimeter':
+                    instrument.innerHTML = `
+                        <div class="multimeter">
+                            <h3>Multimeter</h3>
+                            <div class="multimeter-display">0.000 V</div>
+                            <select>
+                                <option>DC Voltage</option>
+                                <option>AC Voltage</option>
+                                <option>Current</option>
+                                <option>Resistance</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+
+                case 'signal-generator':
+                    instrument.innerHTML = `
+                        <div style="width: 300px;">
+                            <h3>Signal Generator</h3>
+                            <div class="control-group">
+                                <label>Waveform</label>
+                                <select>
+                                    <option>Sine</option>
+                                    <option>Square</option>
+                                    <option>Triangle</option>
+                                </select>
+                                <label>Frequency (Hz)</label>
+                                <input type="range" min="1" max="1000" value="100">
+                                <label>Amplitude (V)</label>
+                                <input type="range" min="0" max="10" value="5" step="0.1">
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'spectrum':
+                    instrument.innerHTML = `
+                        <div style="width: 400px;">
+                            <h3>Spectrum Analyzer</h3>
+                            <canvas width="380" height="200"></canvas>
+                            <div class="control-group">
+                                <label>Frequency Range</label>
+                                <select>
+                                    <option>0-1 kHz</option>
+                                    <option>0-10 kHz</option>
+                                    <option>0-100 kHz</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+
+            // Make instrument draggable
+            instrument.draggable = true;
+            instrument.addEventListener('dragstart', (e) => {
+                const rect = e.target.getBoundingClientRect();
+                e.dataTransfer.setData('text/plain', 'move');
+                e.dataTransfer.setData('offset-x', e.clientX - rect.left);
+                e.dataTransfer.setData('offset-y', e.clientY - rect.top);
+            });
+
+            workspace.appendChild(instrument);
+        }
+
+        // Make instruments movable
+        let activeInstrument = null;
+
+        document.addEventListener('mousedown', (e) => {
+            const instrument = e.target.closest('.panel-front');
+            if (instrument) {
+                activeInstrument = instrument;
+                instrument.style.cursor = 'grabbing';
+                instrument.style.zIndex = '1000';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (activeInstrument) {
+                const workspace = document.querySelector('.workspace');
+                const rect = workspace.getBoundingClientRect();
+
+                activeInstrument.style.left = `${e.clientX - rect.left - 50}px`;
+                activeInstrument.style.top = `${e.clientY - rect.top - 20}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (activeInstrument) {
+                activeInstrument.style.cursor = 'grab';
+                activeInstrument.style.zIndex = '1';
+                activeInstrument = null;
+            }
+        });
+
+        // Initialize FFT for spectrum analyzer
+        class FFT {
+            constructor(size) {
+                this.size = size;
+                this.cosTable = new Float32Array(size);
+                this.sinTable = new Float32Array(size);
+
+                for (let i = 0; i < size; i++) {
+                    this.cosTable[i] = Math.cos(2 * Math.PI * i / size);
+                    this.sinTable[i] = Math.sin(2 * Math.PI * i / size);
+                }
+            }
+
+            transform(input) {
+                const output = new Float32Array(this.size);
+                const real = new Float32Array(this.size);
+                const imag = new Float32Array(this.size);
+
+                // Compute FFT
+                for (let k = 0; k < this.size; k++) {
+                    let sumReal = 0;
+                    let sumImag = 0;
+
+                    for (let n = 0; n < this.size; n++) {
+                        const angle = (2 * Math.PI * k * n) / this.size;
+                        sumReal += input[n] * Math.cos(angle);
+                        sumImag -= input[n] * Math.sin(angle);
+                    }
+
+                    real[k] = sumReal;
+                    imag[k] = sumImag;
+                    output[k] = Math.sqrt(sumReal * sumReal + sumImag * sumImag);
+                }
+
+                return output;
+            }
+        }
+
+        // Initialize spectrum analyzer
+        function initSpectrumAnalyzer() {
+            const fft = new FFT(1024);
+            const spectrumCanvas = document.querySelector('.spectrum-analyzer canvas');
+            if (!spectrumCanvas) return;
+
+            const ctx = spectrumCanvas.getContext('2d');
+
+            function updateSpectrum() {
+                if (!isRunning) return;
+
+                const spectrum = fft.transform(scopeData);
+
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
+
+                ctx.strokeStyle = '#00ff00';
+                ctx.beginPath();
+
+                for (let i = 0; i < spectrum.length / 2; i++) {
+                    const x = i * spectrumCanvas.width / (spectrum.length / 2);
+                    const y = spectrumCanvas.height - (spectrum[i] * spectrumCanvas.height / 1000);
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                ctx.stroke();
+                requestAnimationFrame(updateSpectrum);
+            }
+
+            updateSpectrum();
+        }
+
+        // Initialize the lab
+        drawScope();
+        initSpectrumAnalyzer();
+
+        // Add these physics-related parameters
+        const instrumentPhysics = {
+            // Oscilloscope parameters
+            bandwidth: 100e6, // 100 MHz bandwidth
+            sampleRate: 1e9,  // 1 GSa/s
+            noiseFloor: -70,  // dB
+
+            // Multimeter parameters
+            dmm: {
+                accuracy: 0.001,  // 0.1% accuracy
+                inputImpedance: 10e6, // 10MΩ input impedance
+                maxVoltage: 1000
+            },
+
+            // Signal generator parameters
+            sigGen: {
+                maxFrequency: 20e6, // 20 MHz
+                outputImpedance: 50, // 50Ω output impedance
+                harmonicDistortion: -60 // -60 dB
+            }
+        };
+
+        // Add realistic signal processing
+        function processSignal(rawSignal) {
+            // Add noise
+            const noise = instrumentPhysics.noiseFloor * Math.random();
+
+            // Add bandwidth limitation
+            const bandwidthFactor = Math.min(1, instrumentPhysics.bandwidth /
+                (document.getElementById('frequency').value * 5));
+
+            // Add harmonic distortion
+            const distortion = Math.pow(10, instrumentPhysics.sigGen.harmonicDistortion / 20);
+
+            return rawSignal * bandwidthFactor * (1 + noise + distortion);
+        }
+
+        // Add advanced measurements
+        function performMeasurements() {
+            const waveform = scopeData;
+            const measurements = {
+                vpp: 0,  // Peak-to-peak voltage
+                vrms: 0, // RMS voltage
+                freq: 0, // Frequency
+                rise: 0, // Rise time
+                fall: 0  // Fall time
+            };
+
+            // Calculate peak-to-peak
+            measurements.vpp = Math.max(...waveform) - Math.min(...waveform);
+
+            // Calculate RMS
+            measurements.vrms = Math.sqrt(waveform.reduce((acc, val) =>
+                acc + val * val, 0) / waveform.length);
+
+            // Calculate frequency using zero crossings
+            let zeroCrossings = 0;
+            for (let i = 1; i < waveform.length; i++) {
+                if (waveform[i - 1] < 0 && waveform[i] >= 0) zeroCrossings++;
+            }
+            measurements.freq = zeroCrossings * sampleRate / (2 * waveform.length);
+
+            return measurements;
+        }
+
+    </script>
+</body>
+
+</html>
